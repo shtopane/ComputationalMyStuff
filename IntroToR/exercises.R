@@ -16,16 +16,24 @@ x[2]
 
 # Create a vector with the first and third element of x
 x.sampled <- c(x[1], x[3])
-# Remove the third elmement from 𝑥.
+
+# Easier!
+x[-2] # removes the second element and leaves the first one
+# end the third one
+
+# Remove the third element from 𝑥.
 x[1:length(x) - 1]
 
 # Generate y = 2 5 1
 y <- c(2,5,1)
 x - y
 x * y
+t(x)%*%y
+x%*%t(y)
 
 len <- length(x)
 
+# FILTERING: My version!
 for(i in 1:len){
   if(y[i] > 1.5){
     print(x[i])
@@ -37,6 +45,10 @@ for(i in 1:len){
     print(y[i])
   }
 }
+
+# FILTERING: Easier!
+x[y > 1.5]
+y[x == 6]
 
 # Generate a vector of integers from 4-10.
 int_4_to_10 <- seq(4,10)
@@ -53,7 +65,7 @@ dim(A)
 B <- rbind(c(1,4,2), c(7,5,3))
 C <- rbind(c(1,-1), c(-1, 3))
 diag(C)
-solve(t(C) %*% C)
+solve(t(C)%*%C)
 
 # Logical Operators ----
 z <- c(1:20)
@@ -73,29 +85,47 @@ sort(d)
 sort(d, decreasing=TRUE)
 min(d)
 max(d)
+# There is a func that returns the indices of all occurrences
+# of min and max values
 
 # Statistical Distributions ----
+# Note: build a test for this - check it 2 different ways
+# if you'll get the same value! pbinom can be implemented
+# with dbinom and more options
 dbinom(8,10,0.8)
-dbinom(4, 12, 0.2)
-pbinom(4, 12, 0.2)
+dbinom(4, 12, 0.2) # correct?
+pbinom(4, 12, 0.2) # also correct?
 
 # normal with - mean 72 and sd 15.2
 set.seed(123)
 exam <- rnorm(1000,mean=72, sd=15.2)
 hist(exam)
 
-dnorm(84, mean=72, sd=15.2)
+dnorm(84, mean=72, sd=15.2) # not correct
+pnorm(84, mean=72, sd=15.2, lower.tail=FALSE) # correct!
+
+# Exercise 3 - REDO IT. Actually two cases:
+# 1) Uniform distro
+# 2) Normal distro
+a <- runif(1000, min=0, max=1)
+mean(a)
+sd(a)
+
+# Limit the normal distribution: draw from "truncated normal"?
+# This is the case where we have a mean shift in the disto
 
 # Loops and functions ----
 # 1
 x <- 1
 y <- 40
-i = c(1:10)
 
-for(j in i){
+# Empty vector - resizes?
+
+for(i in 1:10){
   x = x + 3
   y = y - 2
 }
+
 # 2
 a <- 15:10
 b <- 20:15
@@ -132,7 +162,8 @@ for(i in 1:length(vec.2)){
 
 testFunc <- function(u,k,l){
   u.filtered <- u[1:k]
-  u.copy <- u
+  u.copy <- u.filtered
+  
   u.squared <- u.filtered ^ 2
   condition_met_count <- 0
   
@@ -142,7 +173,7 @@ testFunc <- function(u,k,l){
       condition_met_count = condition_met_count + 1
     }
   }
-  
+
   return(list(squared=u.squared, cond_met=condition_met_count))
 }
 
