@@ -73,8 +73,8 @@ for(i in 1:len){
 set.seed(100)
 MSE.container <- rep(0, N)
 Ave.container <- rep(0, N)
-poly_powers <- rep(c(1, 2, 3, 4), N / 4)
-
+# WRONG! poly_powers <- rep(c(1, 2, 3, 4), N / 4)
+poly_powers <- c(rep(1, N/4), rep(2, N/4), rep(3, N/4), rep(4, N/4))
 for (i in 1:N) {
   data <- generate_samples_for_regression_two_vars(N,
                                                    true_betas,
@@ -139,7 +139,9 @@ points(powers,
        col="red", pch=pch
 )
 lines(x=powers, y=Ave.poly_models_means, col="red", pch=pch)
-
+# Add a legend
+legend(x=10.5,legend=c("MSE", "AVG pred error"),
+       col=c("blue", "red"), lty=1:2, cex=0.8)
 generate_samples_for_regression_two_vars <-
   function(N,
            betas,
