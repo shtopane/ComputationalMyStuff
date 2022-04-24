@@ -51,10 +51,10 @@ training_data.MSE <-
 # estimation equation
 powers <- c(1,2,3,4)
 powers_len <- length(powers)
-training_data.lm_poly_models <- list(MSE = rep(0, len))
-test_data.lm_poly_models <- list(PE = rep(0, len))
+training_data.lm_poly_models <- list(MSE = rep(0, powers_len))
+test_data.lm_poly_models <- list(PE = rep(0, powers_len))
 
-for(i in 1:len){
+for(i in 1:powers_len){
   # Evaluate poly models and extract coefficients 
   lm_temp <- lm(Y ~ I(X2^powers[i]), data = training_data)
   lm_temp.coef <- coef(lm_temp)
@@ -75,6 +75,7 @@ MSE.container <- rep(0, N)
 Ave.container <- rep(0, N)
 # WRONG! poly_powers <- rep(c(1, 2, 3, 4), N / 4)
 poly_powers <- c(rep(1, N/4), rep(2, N/4), rep(3, N/4), rep(4, N/4))
+
 for (i in 1:N) {
   data <- generate_samples_for_regression_two_vars(N,
                                                    true_betas,
@@ -88,7 +89,7 @@ for (i in 1:N) {
   
   # Generate test data drawing from distributions but using beta coefficients from training data
   test_data1 <- generate_samples_for_regression_two_vars(N,
-                                                         betas = coef(lm),
+                                                         betas = train_betas,
                                                          X2.mean,
                                                          X2.sd,
                                                          eps.mean,
