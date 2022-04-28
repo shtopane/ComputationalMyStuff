@@ -61,6 +61,7 @@ y <- rbinom(n = length(x), size = 1, prob = prob_i_x)
 data <- cbind(x, prob_i_x)
 
 X <- cbind(rep(1, n), x, x2)
+
 # Formula.. from where?
 loglikelikelihood <- function(beta) {
   ll <-
@@ -77,7 +78,7 @@ ll2 <- myloglikelikelihood(c(0,1,1))
 ## END TESTING Max Likelihood functions
 
 estimate <-
-  maxBFGS(myloglikelikelihood,
+  maxBFGS(loglikelikelihood,
           finalHessian = TRUE,
           start = c(0, 1, 1)) #initialize estimation procedure
 estimate.parameter <- estimate$estimate
