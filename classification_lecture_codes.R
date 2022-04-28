@@ -49,24 +49,35 @@ beta <- cbind(beta0, beta1, beta2)
 # Data
 x <-
   sort(runif(n = n, min = 18, max = 60)) # generating the regressor
-x2 <- rbinom(n, 1, 0.5)
+x2 <- rbinom(n, 1, 0.5) # vector of size 1000 with 1s and 0s. Probability for a 1 is 0.5
 # Equation (6) Classification.html
-model <- beta0 + beta1 * x + beta2 * x2
-prob_i_x <- exp(model) / (1 + exp(model))
+linear_model <- beta0 + beta1 * x + beta2 * x2
+# Logistig function
+prob_i_x <- exp(linear_model) / (1 + exp(linear_model))
 # drawing y with the transformed logit probabilities
+# In Default example this is: Pr(default=YES|balance)
 y <- rbinom(n = length(x), size = 1, prob = prob_i_x)
 
 data <- cbind(x, prob_i_x)
 
 X <- cbind(rep(1, n), x, x2)
-
+# Formula.. from where?
 loglikelikelihood <- function(beta) {
   ll <-
     sum(-y * log(1 + exp(-(X %*% beta))) - (1 - y) * log(1 + exp(X %*% beta)))
 }
+## TESTING Max likelihood functions
+ll1 <- loglikelikelihood(c(0,1,1))
+# This gives the same output as the one above?
+myloglikelikelihood <- function(beta){
+  ll <- sum(-log(1 + exp(X%*%beta)) + y*X%*%beta)
+  return(ll)
+}
+ll2 <- myloglikelikelihood(c(0,1,1))
+## END TESTING Max Likelihood functions
 
 estimate <-
-  maxBFGS(loglikelikelihood,
+  maxBFGS(myloglikelikelihood,
           finalHessian = TRUE,
           start = c(0, 1, 1)) #initialize estimation procedure
 estimate.parameter <- estimate$estimate
