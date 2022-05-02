@@ -39,6 +39,8 @@ getMarginalEffectBeta1 <- function(length = n,
   
   return(NULL)
 }
+
+set.seed(123)
 # Parameters
 n <- 1000
 x <- sort(runif(n = n, min = 18, max = 60))
