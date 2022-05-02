@@ -81,6 +81,10 @@ prob_i_x <- exp(linear_model) / (1 + exp(linear_model))
 
 # a) ?
 y <- rbinom(n = length(x), size = 1, prob = prob_i_x)
+data <- data.frame("Y" = y,
+                   # "X0" = X[, 1], don't add intercept
+                   "X1" = X[, 2],
+                   "X2" = X[, 3])
 
 # c) Plot the likelihood function and the log-likelihood function for a range of values for the two parameters
 # separately and show that they are maximized at the same value. ----
