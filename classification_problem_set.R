@@ -18,7 +18,7 @@ x <- sort(runif(n = n, min = 18, max = 60))
 x2 <- rbinom(n, 1, prob = 0.5)
 X <- cbind(rep(1, n), x, x2)
 
-beta0 <- 1
+beta0 <- -2
 beta1 <- 0.1
 beta2 <- 1
 beta <- cbind(beta0, beta1, beta2)
