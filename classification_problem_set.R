@@ -13,8 +13,14 @@ mylikelihood <- function(beta) {
   # (2) - our linear model
   #likelihood <- beta[0] + beta[1] * x + beta[2] * x2
   
-  # (3) max likelihood
-  likelihood <- prod((prob_i_x^y) * ((1 - prob_i_x)^(1 - y))) # this behaves the same as (2)
+  # (3) max
+  
+  linear_model <- beta[1] + beta[2] * x + beta[3] * x2
+  # prod((exp(linear_model) / (1 + exp(linear_model)))^y * (1 - (exp(linear_model)/(1 - exp(linear_model))))^(1 - y))
+  likelihood <- prod((exp(linear_model) / (1 + exp(linear_model))) ^ y * (1 - (exp(linear_model) / (
+    1 + exp(linear_model)
+  ))) ^ (1 - y))
+  # likelihood <- prod((prob_i_x^y) * ((1 - prob_i_x)^(1 - y))) # this behaves the same as (2)
   return(likelihood)
 }
 
@@ -40,7 +46,12 @@ getMarginalEffectBeta1 <- function(length = n,
       dx_container[i] <- estimate[2] * prob_i * (1 - prob_i)
       probability_container[i] <- prob_i
     }
-    return(list(dx_container = dx_container, probability_container = probability_container))
+    return(
+      list(
+        dx_container = dx_container,
+        probability_container = probability_container
+      )
+    )
   }
   
   return(NULL)
@@ -66,29 +77,18 @@ y <- rbinom(n = length(x), size = 1, prob = prob_i_x)
 
 # c) Plot the likelihood function and the log-likelihood function for a range of values for the two parameters
 # separately and show that they are maximized at the same value.
-beta_start_0 <- seq(-2.5, -1.5, le=n)
-beta_start_1 <- seq(-0.4, 0.6, le=n)
-beta_start_2 <-  seq(0.5, 1.5, le=n)
-beta_start_param <- cbind(beta_start_0, beta_start_1, beta_start_2)
-betas_range <- seq(min(beta_start_param),max(beta_start_param), le=n)
-
-results_maybe_log_like <- rep(0, nrow(beta_start_param))
-
-for(i in 1:nrow(beta_start_param)){
-  results_maybe_log_like[i] <- myloglikelihood(beta_start_param[i, ])
+plotlike <- function(x){
+  betas <- c(beta0, beta1, x)
+  result <- mylikelihood(betas)
+  return(result)
 }
 
-plot(betas_range, results_maybe_log_like, xlim=c(-0.4, 1.5), ylab="log-likelihood_estimate_raw")
-lines(beta_start_1, results_maybe_log_like, col="blue")
-lines(beta_start_2, results_maybe_log_like, col="red")
-
-results_maybe_likelihood <- rep(0, nrow(beta_start_param))
-for(i in 1:nrow(beta_start_param)){
-  results_maybe_likelihood[i] <- mylikelihood(beta_start_param[i, ])
-}
-plot(betas_range, results_maybe_likelihood, xlim=c(-0.4, 1.5), ylab="likelihood_estimate_raw")
-lines(betas_range, results_maybe_likelihood, col="blue")
-lines(betas_range, results_maybe_likelihood, col="red")
+expr_plotlike <- Vectorize(plotlike)
+result <- curve(expr = expr_plotlike, from= 0, to=2.00)
+plot(result)
+lines(result, col="red")
+max_of_result <- result$x[which(result$y==(max(result$y,na.rm = TRUE)))]
+abline(v = max_of_result)
 # Testing functions from https://www.r-bloggers.com/2019/08/maximum-likelihood-estimation-from-scratch/
 
 library(maxLik)
@@ -100,11 +100,12 @@ loglikelihood.estimate <- maxBFGS(myloglikelihood,
 ### TODO: Pass previous estimation as this function's start parameter? This is cheating maybe
 likelihood.estimate <- maxBFGS(mylikelihood,
                                finalHessian = TRUE,
-                               start=loglikelihood.estimate$estimate)
+                               start = loglikelihood.estimate$estimate)
 
 
 
-likelihood.covariance_matrix <- -(solve(likelihood.estimate$hessian))
+likelihood.covariance_matrix <-
+  -(solve(likelihood.estimate$hessian))
 loglikelihood.covariance_matrix <-
   -(solve(loglikelihood.estimate$hessian))
 
@@ -121,7 +122,13 @@ likelihood.result <- getMarginalEffectBeta1(
   dx_container = rep(0, x_len),
   probability_container = rep(0, x_len)
 )
-plot(x, likelihood.result$dx_container, type="l", main="Likelihood", ylab="dx")
+plot(
+  x,
+  likelihood.result$dx_container,
+  type = "l",
+  main = "Likelihood",
+  ylab = "dx"
+)
 
 likelihood.result1 <- getMarginalEffectBeta1(
   length = x_len,
@@ -130,7 +137,7 @@ likelihood.result1 <- getMarginalEffectBeta1(
   dx_container = rep(0, x_len),
   probability_container = rep(0, x_len)
 )
-lines(x, likelihood.result1$dx_container, col="red")
+lines(x, likelihood.result1$dx_container, col = "red")
 
 loglikelihood.result <- getMarginalEffectBeta1(
   length = x_len,
@@ -139,7 +146,13 @@ loglikelihood.result <- getMarginalEffectBeta1(
   dx_container = rep(0, x_len),
   probability_container = rep(0, x_len)
 )
-plot(x, loglikelihood.result$dx_container, type= "l", main = "Log-Likelihood estimate", ylab = "dx")
+plot(
+  x,
+  loglikelihood.result$dx_container,
+  type = "l",
+  main = "Log-Likelihood estimate",
+  ylab = "dx"
+)
 
 loglikelihood.result1 <- getMarginalEffectBeta1(
   length = x_len,
@@ -148,14 +161,14 @@ loglikelihood.result1 <- getMarginalEffectBeta1(
   dx_container = rep(0, x_len),
   probability_container = rep(0, x_len)
 )
-lines(x, loglikelihood.result1$dx_container, col="red")
+lines(x, loglikelihood.result1$dx_container, col = "red")
 
 # Plot probabilities
-plot(x, loglikelihood.result$probability_container, main="Estimated Probabilities")
-lines(x, loglikelihood.result1$probability_container, col="red")
+plot(x, loglikelihood.result$probability_container, main = "Estimated Probabilities")
+lines(x, loglikelihood.result1$probability_container, col = "red")
 
-plot(x, loglikelihood.result$probability_container, ylim=c(0, 1))
-lines(x, loglikelihood.result1$probability_container, col="red")
+plot(x, loglikelihood.result$probability_container, ylim = c(0, 1))
+lines(x, loglikelihood.result1$probability_container, col = "red")
 
 # TEST f)?
 logit <- function(x) {
