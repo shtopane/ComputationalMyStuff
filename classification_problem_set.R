@@ -26,6 +26,7 @@ mylikelihood <- function(beta) {
 }
 
 getMarginalEffectBeta1 <- function(length = n,
+                                   # x2 vector default value
                                    x2 = 0,
                                    # likelihood OR log-likelihood
                                    estimate_for = "likelihood",
@@ -34,12 +35,17 @@ getMarginalEffectBeta1 <- function(length = n,
   estimate <- NULL
   
   if (estimate_for == "likelihood") {
+    # deprecated case
     estimate <- likelihood.estimate$estimate
   } else if (estimate_for == "loglikelihood") {
     estimate <- loglikelihood.estimate$estimate
   }
   
   if (!is.null(estimate)) {
+    # Create containers
+    dx_container <- rep(0, length(x))
+    probability_container <- rep(0, length(x))
+    
     for (i in 1:length) {
       prob_i <-
         exp(estimate[1] + estimate[2] * x[i] + estimate[3] * x2) / (1 + exp(estimate[1] + estimate[2] * x[i] + estimate[3] * x2))
@@ -195,45 +201,44 @@ max_of_result_log_beta_2
 abline(v = max_of_result_log_beta_2)
 # End for c) -----
 
+# d) Estimate β0, β1, β2 via maximum likelihood and calculate the standard errors. Use the estimation template
+# provided in the lecture.
 library(maxLik)
-# Getting an estimate for both functions
+# Getting an estimate for log-likelihood
 start_param <- c(0, 1, 1)
 loglikelihood.estimate <- maxBFGS(myloglikelihood,
                                   finalHessian = TRUE,
                                   start = start_param)
 loglikelihood.estimate$estimate
-### TODO: Pass previous estimation as this function's start parameter? This is cheating maybe
-likelihood.estimate <- maxBFGS(mylikelihood,
-                               finalHessian = TRUE,
-                               start = loglikelihood.estimate$estimate)
 
-likelihood.estimate$estimate
-
-likelihood.covariance_matrix <-
-  -(solve(likelihood.estimate$hessian))
 loglikelihood.covariance_matrix <-
   -(solve(loglikelihood.estimate$hessian))
 
-likelihood.sde <- sqrt(diag(likelihood.covariance_matrix))
 loglikelihood.sde <- sqrt(diag(loglikelihood.covariance_matrix))
+loglikelihood.sde
 
+# e) Propose and calculate a suitable method for the interpretation of the coefficients as discussed in the lecture.
+# Not sure if this is what is asked?
 x_len <- length(x)
 
-# Likelihood
-likelihood.result <- getMarginalEffectBeta1(
-  length = x_len,
-  estimate_for = "likelihood",
-  x2 = 0,
-  dx_container = rep(0, x_len),
-  probability_container = rep(0, x_len)
-)
+# Marginal effects when x2 = 0
+loglikelihood.result <- getMarginalEffectBeta1(length = x_len,
+                                               estimate_for = "loglikelihood",
+                                               x2 = 0)
+# Marginal effects when x2 = 1
+loglikelihood.result1 <- getMarginalEffectBeta1(length = x_len,
+                                                estimate_for = "loglikelihood",
+                                                x2 = 1)
+# Plotting marginal effects of beta1 when x2=0
 plot(
   x,
-  likelihood.result$dx_container,
+  loglikelihood.result$dx_container,
   type = "l",
-  main = "Likelihood",
+  main = "Log-Likelihood estimate",
   ylab = "dx"
 )
+# Plotting marginal effects of beta1 when x2=1
+lines(x, loglikelihood.result1$dx_container, col = "red")
 
 likelihood.result1 <- getMarginalEffectBeta1(
   length = x_len,
