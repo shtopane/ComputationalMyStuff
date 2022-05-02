@@ -5,10 +5,16 @@ myloglikelihood <- function(beta) {
     sum(-y * log(1 + exp(-(X %*% beta))) - (1 - y) * log(1 + exp(X %*% beta)))
   return(loglikelihood)
 }
+
 # b) Normal Likelihood
 mylikelihood <- function(beta) {
-  likelihood <-
-    sum(-y * 1 + exp(-(X %*% beta)) - (1 - y) * (1 + exp(X %*% beta)))
+  # likelihood <- I(beta) # this produces very large numbers
+  
+  # (2) - our linear model
+  #likelihood <- beta[0] + beta[1] * x + beta[2] * x2
+  
+  # (3) max likelihood
+  likelihood <- prod((prob_i_x^y) * ((1 - prob_i_x)^(1 - y))) # this behaves the same as (2)
   return(likelihood)
 }
 
