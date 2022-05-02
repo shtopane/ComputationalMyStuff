@@ -12,6 +12,33 @@ mylikelihood <- function(beta) {
   return(likelihood)
 }
 
+getMarginalEffectBeta1 <- function(length = n,
+                                   x2 = 0,
+                                   # likelihood OR log-likelihood
+                                   estimate_for = "likelihood",
+                                   dx_container = NULL,
+                                   probability_container = NULL) {
+  estimate <- NULL
+  
+  if (estimate_for == "likelihood") {
+    estimate <- likelihood.estimate$estimate
+  } else if (estimate_for == "loglikelihood") {
+    estimate <- loglikelihood.estimate$estimate
+  }
+  
+  if (!is.null(estimate)) {
+    for (i in 1:length) {
+      prob_i <-
+        exp(estimate[1] + estimate[2] * x[i] + estimate[3] * x2) / (1 + exp(estimate[1] + estimate[2] * x[i] + estimate[3] * x2))
+      
+      dx_container[i] <- estimate[2] * prob_i * (1 - prob_i)
+      probability_container[i] <- prob_i
+    }
+    return(list(dx_container = dx_container, probability_container = probability_container))
+  }
+  
+  return(NULL)
+}
 # Parameters
 n <- 1000
 x <- sort(runif(n = n, min = 18, max = 60))
