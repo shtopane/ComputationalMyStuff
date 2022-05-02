@@ -244,43 +244,96 @@ plot(
 # Plotting marginal effects of beta1 when x2=1
 lines(x, loglikelihood.result1$dx_container, col = "red")
 
-likelihood.result1 <- getMarginalEffectBeta1(
-  length = x_len,
-  estimate_for = "likelihood",
-  x2 = 1,
-  dx_container = rep(0, x_len),
-  probability_container = rep(0, x_len)
-)
-lines(x, likelihood.result1$dx_container, col = "red")
+# f) Visualize results(Confidence intervals?)
 
-loglikelihood.result <- getMarginalEffectBeta1(
-  length = x_len,
-  estimate_for = "loglikelihood",
-  x2 = 0,
-  dx_container = rep(0, x_len),
-  probability_container = rep(0, x_len)
+model <- glm(
+  formula =
+    y ~ X1 + X2,
+  family = binomial(link = "logit"),
+  data = data
 )
-plot(
-  x,
-  loglikelihood.result$dx_container,
-  type = "l",
-  main = "Log-Likelihood estimate",
-  ylab = "dx"
-)
+# Getting some regressor X for which the coefficient is NA...
+summary(model)
+# Log-odds
+summary(model)$coefficients
+# Not getting NA this way..
+estimated_betas <-
+  c(
+    summary(model)$coefficients[1],
+    summary(model)$coefficients[2],
+    summary(model)$coefficients[3]
+  )
+# Odd-ratio for beta1
+exp(estimated_betas[2])
 
-loglikelihood.result1 <- getMarginalEffectBeta1(
-  length = x_len,
-  estimate_for = "loglikelihood",
-  x2 = 1,
-  dx_container = rep(0, x_len),
-  probability_container = rep(0, x_len)
-)
-lines(x, loglikelihood.result1$dx_container, col = "red")
+# Confidence intervals Log-odds, Beta 1
+confint.default(model)[2, ]
+# # Confidence intervals Odds, Beta 1
+exp(confint.default(model)[2, ]) # between 9.21% and 14.09%
+
+# Model prediction
+set.seed(666)
+# Draw new data?
+n_test <- 1000
+x_test <- sort(runif(n = n_test, min = 18, max = 60))
+x2_test <- rbinom(n = n_test, 1, prob = 0.5)
+X_test <- cbind(rep(1, n_test), x, x2)
+data_test <- data.frame("X1" = X[, 2], "X2" = X[, 3])
+
+# with increasing X -> increasing probability
+predict(model, newdata = data_test, type = "response")
+
+# Visualizing results: Confidence Intervals
+set.seed(689)
+x_to_visualize <- sort(runif(n = n_test, min = 18, max = 60))
+
+# When x2 = 0
+plot_confidence_itervals <- function(x2=0, xlab){
+  probs <-
+    predict(
+      model,
+      newdata = data.frame(X1 = x_to_visualize, X2 = x2),
+      type = "response",
+      se.fit = TRUE
+    )
+  probs_fit <- probs$fit
+  probs_upper <- probs$fit + probs$se.fit * 1.96 # 95% confidence interval
+  probs_lower <- probs$fit - probs$se.fit * 1.96 # 95% confidence interval
+  
+  plot(
+    x,
+    y,
+    pch=16,
+    cex=1,
+    ylab="Probability",
+    xlab=xlab
+  )
+  grid()
+  polygon(
+    c(rev(x_to_visualize), x_to_visualize),
+    c(rev(probs_lower), probs_upper),
+    col="grey90",
+    border=NA
+  )
+  
+  lines(x_to_visualize, probs_fit, lwd=2)
+  lines(x_to_visualize, probs_upper, lwd=2, col="red")
+  lines(x_to_visualize, probs_lower, lwd=2, col="red")
+  
+  abline(h=0.1, lty=2)
+  abline(h=0.5, lty=2)
+  abline(h=0.9, lty=2)
+}
+
+# Plot for X2=0
+plot_confidence_itervals(x2=0, xlab = "X1's when X2=0")
+# Plot for X2=1
+plot_confidence_itervals(x2=1, xlab="X1's when X2=1")
 
 # Plot probabilities
 # plot(x, loglikelihood.result$probability_container, main = "Estimated Probabilities")
 # lines(x, loglikelihood.result1$probability_container, col = "red")
-# 
+#
 # plot(x, loglikelihood.result$probability_container, ylim = c(0, 1))
 # lines(x, loglikelihood.result1$probability_container, col = "red")
 
