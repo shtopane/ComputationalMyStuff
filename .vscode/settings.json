@@ -1,12 +1,12 @@
 {
     "r.bracketedPaste": true,
     "r.rterm.windows": "C:\\Users\\Krasi\\anaconda3\\Scripts\\radian.exe", //Use this only for Windows 
-    "r.lsp.path": "C:\\Program Files\\R\\R-4.1.1\\bin",
+    "r.lsp.path": "C:\\Program Files\\R\\R-4.1.1\\bin\\R.exe",
     "r.lsp.debug": true,
     "r.lsp.diagnostics": true,
     "r.rterm.option": [
     "--no-save",
     "--no-restore",
-    "--r-binary=*Path to R executable*"
+    "--r-binary=C:\\Program Files\\R\\R-4.1.1\\bin\\R.exe"
     ]
 }
