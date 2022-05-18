@@ -8,5 +8,14 @@
     "--no-save",
     "--no-restore",
     "--r-binary=C:\\Program Files\\R\\R-4.1.1\\bin\\R.exe"
+    ],
+    "cSpell.words": [
+        "loglikelihood",
+        "mylikelihood",
+        "myloglikelihood",
+        "newdata",
+        "topleft",
+        "xlab",
+        "ylab"
     ]
 }
