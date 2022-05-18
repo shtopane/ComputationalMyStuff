@@ -8,39 +8,35 @@ myloglikelihood <- function(beta) {
 
 # b) Normal Likelihood
 mylikelihood <- function(beta) {
-  # likelihood <- I(beta) # this produces very large numbers
-
-  # (2) - our linear model
-  # likelihood <- beta[0] + beta[1] * x + beta[2] * x2
-
-  # (3) max
-
   linear_model <- beta[1] + beta[2] * x + beta[3] * x2
-  # prod((exp(linear_model) / (1 + exp(linear_model)))^y * (1 - (exp(linear_model)/(1 - exp(linear_model))))^(1 - y))
+
   likelihood <-
     prod((exp(linear_model) / (1 + exp(linear_model)))^y * (1 - (exp(linear_model) / (
       1 + exp(linear_model)
     )))^(1 - y))
-  # likelihood <- prod((prob_i_x^y) * ((1 - prob_i_x)^(1 - y))) # this behaves the same as (2)
   return(likelihood)
+}
+
+calculate_prob_x <- function(estimators_vector, x_vector) {
+  result <- (exp(x_vector[1] * estimators_vector[1] + x_vector[2] * estimators_vector[2] + x_vector[3] * estimators_vector[3])
+  / (1 + exp(x_vector[1] * estimators_vector[1] + x_vector[2] * estimators_vector[2] + x_vector[3] * estimators_vector[3]))
+  )
+
+  return(result)
+}
+
+find_max_value_after_curve <- function(x, y) {
+  result <- x[which(y == (max(y, na.rm = TRUE)))]
+  return(result)
 }
 
 get_marginal_effect_beta_1 <- function(length = n,
                                        # x2 vector default value
                                        x2 = 0,
-                                       # likelihood OR log-likelihood
-                                       estimate_for = "likelihood",
+                                       # estimated quantity from likelihood or loglikelihood function
+                                       estimate,
                                        dx_container = NULL,
                                        probability_container = NULL) {
-  estimate <- NULL
-
-  if (estimate_for == "likelihood") {
-    # deprecated case
-    estimate <- likelihood.estimate$estimate
-  } else if (estimate_for == "loglikelihood") {
-    estimate <- loglikelihood_estimate$estimate
-  }
-
   if (!is.null(estimate)) {
     # Create containers
     dx_container <- rep(0, length(x))
@@ -69,7 +65,7 @@ set.seed(123)
 n <- 1000
 x <- sort(runif(n = n, min = 18, max = 60))
 x2 <- rbinom(n, 1, prob = 0.5)
-X <- cbind(rep(1, n), x, x2)
+X <- cbind(rep(1, n), x, x2) # nolint
 
 beta0 <- -2
 beta1 <- 0.1
@@ -133,10 +129,11 @@ result_beta0 <- curve(
   ylab = "mylikelihood(beta0)",
   main = "Evaluating Likelihood function for beta0"
 )
-max_of_result_beta0 <-
-  result_beta0$x[which(result_beta0$y == (max(result_beta0$y, na.rm = TRUE)))]
+max_of_result_beta0 <- find_max_value_after_curve(result_beta0$x, result_beta0$y)
+# max_of_result_beta0 <-
+#   result_beta0$x[which(result_beta0$y == (max(result_beta0$y, na.rm = TRUE)))]
 max_of_result_beta0
-abline(v = max_of_result_beta0)
+abline(v = max_of_result_beta0, col = "red", lty = 2)
 
 # For beta 1
 result_beta1 <- curve(
@@ -147,8 +144,9 @@ result_beta1 <- curve(
   ylab = "mylikelihood(beta1)",
   main = "Evaluating Likelihood function for beta1"
 )
-max_of_result_beta1 <-
-  result_beta1$x[which(result_beta1$y == (max(result_beta1$y, na.rm = TRUE)))]
+max_of_result_beta1 <- find_max_value_after_curve(result_beta1$x, result_beta1$y)
+# max_of_result_beta1 <-
+#   result_beta1$x[which(result_beta1$y == (max(result_beta1$y, na.rm = TRUE)))]
 max_of_result_beta1
 abline(v = max_of_result_beta1)
 
@@ -162,8 +160,9 @@ result_beta2 <-
     ylab = "mylikelihood(beta2)",
     main = "Evaluating Likelihood function for beta2"
   )
-max_of_result_beta2 <-
-  result_beta2$x[which(result_beta2$y == (max(result_beta2$y, na.rm = TRUE)))]
+max_of_result_beta2 <- find_max_value_after_curve(result_beta2$x, result_beta2$y)
+# max_of_result_beta2 <-
+#   result_beta2$x[which(result_beta2$y == (max(result_beta2$y, na.rm = TRUE)))]
 max_of_result_beta2
 abline(v = max_of_result_beta2)
 
@@ -179,8 +178,9 @@ result_log_beta_0 <-
     ylab = "myloglikelihood(beta0)",
     main = "Evaluating Log-Likelihood function for beta0"
   )
-max_of_result_log_beta_0 <-
-  result_log_beta_0$x[which(result_log_beta_0$y == (max(result_log_beta_0$y, na.rm = TRUE)))]
+max_of_result_log_beta_0 <- find_max_value_after_curve(result_log_beta_0$x, result_log_beta_0$y)
+# max_of_result_log_beta_0 <-
+#   result_log_beta_0$x[which(result_log_beta_0$y == (max(result_log_beta_0$y, na.rm = TRUE)))]
 max_of_result_log_beta_0
 abline(v = max_of_result_log_beta_0)
 # For beta1
@@ -193,8 +193,9 @@ result_log_beta_1 <-
     ylab = "myloglikelihood(beta1)",
     main = "Evaluating Log-Likelihood function for beta1"
   )
-max_of_result_log_beta_1 <-
-  result_log_beta_1$x[which(result_log_beta_1$y == (max(result_log_beta_1$y, na.rm = TRUE)))]
+max_of_result_log_beta_1 <- find_max_value_after_curve(result_log_beta_1$x, result_log_beta_1$y)
+# max_of_result_log_beta_1 <-
+#   result_log_beta_1$x[which(result_log_beta_1$y == (max(result_log_beta_1$y, na.rm = TRUE)))]
 max_of_result_log_beta_1
 abline(v = max_of_result_log_beta_1)
 # For beta2
@@ -207,8 +208,9 @@ result_log_beta_2 <-
     ylab = "myloglikelihood(beta2)",
     main = "Evaluating Log-Likelihood function for beta2"
   )
-max_of_result_log_beta_2 <-
-  result_log_beta_2$x[which(result_log_beta_2$y == (max(result_log_beta_2$y, na.rm = TRUE)))]
+max_of_result_log_beta_2 <- find_max_value_after_curve(result_log_beta_2$x, result_log_beta_2$y)
+# max_of_result_log_beta_2 <-
+#   result_log_beta_2$x[which(result_log_beta_2$y == (max(result_log_beta_2$y, na.rm = TRUE)))]
 max_of_result_log_beta_2
 abline(v = max_of_result_log_beta_2)
 # End for c) -----
@@ -225,7 +227,7 @@ loglikelihood_estimate <- maxBFGS(myloglikelihood,
 loglikelihood_estimate$estimate
 
 loglikelihood_covariance_matrix <-
-  -(solve(loglikelihood_estimate$hessian))
+  - (solve(loglikelihood_estimate$hessian))
 
 loglikelihood_sde <- sqrt(diag(loglikelihood_covariance_matrix))
 loglikelihood_sde
@@ -237,13 +239,13 @@ x_len <- length(x)
 # Marginal effects when x2 = 0
 loglikelihood_result <- get_marginal_effect_beta_1(
   length = x_len,
-  estimate_for = "loglikelihood",
+  estimate = loglikelihood_estimate$estimate,
   x2 = 0
 )
 # Marginal effects when x2 = 1
 loglikelihood_result1 <- get_marginal_effect_beta_1(
   length = x_len,
-  estimate_for = "loglikelihood",
+  estimate = loglikelihood_estimate$estimate,
   x2 = 1
 )
 # Plotting marginal effects of beta1 when x2=0
@@ -256,28 +258,25 @@ plot(
 )
 
 # # Predicted for x=0
-# plot(
-#   x,
-#   loglikelihood_result$probability_container,
-#   type="l",
-#   ylim=c(0,1)
-# )
-# abline(h=0.1,col="red")
-# abline(h=0.5,col="red")
-# abline(h=0.9,col="red")
-# # Predicted for x=1
-# plot(
-#   x,
-#   loglikelihood_result1$probability_container,
-#   type="l",
-#   ylim=c(0,1)
-# )
-# abline(h=0.1,col="red")
-# abline(h=0.5,col="red")
-# abline(h=0.9,col="red")
-
-# Plotting marginal effects of beta1 when x2=1
-lines(x, loglikelihood_result1$dx_container, col = "red")
+plot(
+  x,
+  loglikelihood_result$probability_container,
+  type = "l",
+  ylim = c(0, 1)
+)
+abline(h = 0.1, col = "red")
+abline(h = 0.5, col = "red")
+abline(h = 0.9, col = "red")
+# Predicted for x=1
+plot(
+  x,
+  loglikelihood_result1$probability_container,
+  type = "l",
+  ylim = c(0, 1)
+)
+abline(h = 0.1, col = "red")
+abline(h = 0.5, col = "red")
+abline(h = 0.9, col = "red")
 
 # f) Visualize results(Confidence intervals?)
 
@@ -291,15 +290,6 @@ model <- glm(
 summary(model)
 # Log-odds
 summary(model)$coefficients
-# Not getting NA this way..
-estimated_betas <-
-  c(
-    summary(model)$coefficients[1],
-    summary(model)$coefficients[2],
-    summary(model)$coefficients[3]
-  )
-# Odd-ratio for beta1
-exp(estimated_betas[2])
 
 # Confidence intervals Log-odds, Beta 1
 confint.default(model)[2, ]
@@ -367,12 +357,6 @@ plot_confidence_intervals(x2 = 0, xlab = "X1's when X2=0")
 plot_confidence_intervals(x2 = 1, xlab = "X1's when X2=1")
 
 # 2. Simulation study
-# calculate_y_fit_logit <- function(x2 = 0, index, betas, x) {
-#   prob_i <-
-#     exp(betas[1] + betas[2] * x[index] + betas[3] * x2) / (1 + exp(betas[1] + betas[2] * x[j] + betas[3] * x2))
-#   return(prob_i)
-# }
-
 set.seed(456)
 # library(maxLik)
 # Parameters(variables override with previous ones)
@@ -382,25 +366,25 @@ beta1 <- 0.1
 beta2 <- 1
 beta <- cbind(beta0, beta1, beta2)
 
-x0_test <- rep(1, n)
-x1_test <- runif(n, min = 18, max = 60)
-x2_test <- rbinom(n, size = 1, prob = 0.5)
-x_test <- cbind(x0_test, x1_test, x2_test)
+# x0_test <- rep(1, n)
+# x1_test <- runif(n, min = 18, max = 60)
+# x2_test <- rbinom(n, size = 1, prob = 0.5)
+# x_test <- cbind(x0_test, x1_test, x2_test)
 
-# Create test data
-pi_x_test <- (
-  exp(x0_test * beta0 + x1_test * beta1 + x2_test * beta2) /
-    (1 + exp(x0_test * beta0 + x1_test * beta1 + x2_test * beta2))
-)
-y_test <- rbinom(n, size = 1, prob = pi_x_test)
-data_test <- cbind(y_test, x_test, pi_x_test)
-dataframe_test <- data.frame(
-  y = y_test,
-  x0 = x0_test,
-  x1 = x1_test,
-  x2 = x2_test,
-  pi_x_test = pi_x_test
-)
+# # Create test data
+# pi_x_test <- (
+#   exp(x0_test * beta0 + x1_test * beta1 + x2_test * beta2) /
+#     (1 + exp(x0_test * beta0 + x1_test * beta1 + x2_test * beta2))
+# )
+# y_test <- rbinom(n, size = 1, prob = pi_x_test)
+# data_test <- cbind(y_test, x_test, pi_x_test)
+# dataframe_test <- data.frame(
+#   y = y_test,
+#   x0 = x0_test,
+#   x1 = x1_test,
+#   x2 = x2_test,
+#   pi_x_test = pi_x_test
+# )
 
 # Simulation
 set.seed(2198)
@@ -438,13 +422,13 @@ for (i in 1:simulation_runs) {
   pi_x_test <- (
     exp(x0_test * beta0 + x1_test * beta1 + x2_test * beta2)
     / (1 + exp(x0_test * beta0 + x1_test * beta1 + x2_test * beta2))
-    )
+  )
   y_test <- rbinom(n, size = 1, prob = pi_x_test)
 
   pi_x_test_pred <- (
     exp(x0_test * beta0_train + x1_test * beta1_train + x2_test * beta2_train)
     / (1 + exp(x0_test * beta0_train + x1_test * beta1_train + x2_test * beta2_train))
-    )
+  )
   y_test_pred <- rbinom(n, size = 1, prob = pi_x_test_pred)
 
   mse_count[i] <- 1 / n * sum(!(y == y_train))
