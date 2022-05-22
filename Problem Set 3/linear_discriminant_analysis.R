@@ -49,13 +49,13 @@ plot2 <- ggplot(train_data, aes(C1, C2, color = train_lda_predict$class)) +
 plot2
 
 # Logistic regression
-get_class_logit <- function(prediction, class1_name, class2_name) {
-    factor(ifelse(prediction > 0.5, class2_name, class1_name))
+get_class_logit <- function(prediction, class1 = class1_name, class2 = class2_name) {
+    factor(ifelse(prediction > 0.5, class1, class2))
 }
 
 train_logit <- glm(class_type ~ C1 + C2, data = train_data, family = "binomial")
 train_logit_predict <- predict(train_logit, newdata = train_data, type = "response")
-train_logit_class_type <- get_class_logit(train_logit_predict, class1_name, class2_name)
+train_logit_class_type <- get_class_logit(train_logit_predict)
 
 plot3 <- ggplot(train_data, aes(C1, C2, color = train_logit_class_type)) +
     geom_point() +
@@ -75,7 +75,7 @@ test_data <- generate_data_lda(class1_n, class2_n, class1_mu, class2_mu)
 
 test_lda_predict <- predict(train_lda, newdata = test_data)
 test_logit_predict <- predict(train_logit, newdata = test_data, type = "response")
-test_logit_predict_class_type <- get_class_logit(test_logit_predict, class1_name, class2_name)
+test_logit_predict_class_type <- get_class_logit(test_logit_predict)
 
 test_lda_error <- get_average_prediction_error(test_data$class_type, test_lda_predict$class)
 test_logit_error <- get_average_prediction_error(test_data$class_type, test_logit_predict_class_type)
@@ -99,7 +99,7 @@ for (i in 1:simulation_runs) {
 
     train_logit <- glm(class_type ~ C1 + C2, data = train_data, family = "binomial")
     train_logit_predict <- predict(train_logit, newdata = train_data, type = "response")
-    train_logit_predict_class_type <- get_class_logit(train_logit_predict, class1_name, class2_name)
+    train_logit_predict_class_type <- get_class_logit(train_logit_predict)
 
     # Calculate errors
     train_lda_error_container[i] <- get_average_prediction_error(train_data$class_type, train_lda_predict$class)
@@ -108,7 +108,7 @@ for (i in 1:simulation_runs) {
     # Estimate lda + logit for test data
     test_lda_predict <- predict(train_lda, newdata = test_data)
     test_logit_predict <- predict(train_logit, newdata = test_data, type = "response")
-    test_logit_predict_class_type <- get_class_logit(test_logit_predict, class1_name, class2_name)
+    test_logit_predict_class_type <- get_class_logit(test_logit_predict)
 
     # Calculate errors
     test_lda_error_container[i] <- get_average_prediction_error(test_data$class_type, test_lda_predict$class)
@@ -192,7 +192,7 @@ for (i in 1:sigma_adjustment_factor_length) {
 
         test_lda_predict <- predict(train_lda, newdata = test_data)
         test_logit_predict <- predict(train_logit, newdata = test_data, type = "response")
-        test_logit_predict_class_type <- get_class_logit(test_logit_predict, class1_name, class2_name)
+        test_logit_predict_class_type <- get_class_logit(test_logit_predict)
 
         test_lda_new_error_container[j] <- get_average_prediction_error(train_data$class_type, test_lda_predict$class)
         test_logit_new_error_container[j] <- get_average_prediction_error(train_data$class_type, test_logit_predict_class_type)
@@ -240,7 +240,7 @@ for(i in 1:10){
 
         test_lda_predict <- predict(train_lda, newdata = test_data)
         test_logit_predict <- predict(train_logit, newdata = test_data, type = "response")
-        test_logit_predict_class_type <- get_class_logit(test_logit_predict, class1_name, class2_name)
+        test_logit_predict_class_type <- get_class_logit(test_logit_predict)
 
         simulation_test_lda_error[j] <- get_average_prediction_error(test_data$class_type, test_lda_predict$class)
         simulation_test_logit_error[j] <- get_average_prediction_error(test_data$class_type, test_logit_predict_class_type)
