@@ -17,8 +17,8 @@ sigma_cap <- rbind(c(16, -2), c(-2, 9))
 
 generate_data_lda <- function(class1_n, class2_n, class1_mu, class2_mu, class1_sigma_cap = sigma_cap, class2_sigma_cap = sigma_cap) {
     # Create a data object of length class1 + class2 and add the 2 classes proportional to their sample size.
-    # Ex. class1: 300, class2: 500 => class_type will have 300 entries labeled as class1 and 500 entries labeled as class2. The factor helps easily diff between the two
-    # by levels(i.e. Class1  and Class2)
+    # Ex. class1: 300, class2: 500 => class_type will have 300 entries labeled as class1 and 500 entries labeled as class2.
+    # The factor helps easily diff between the two by levels(i.e. Class1  and Class2)
     class_type <- factor(c(rep(class1_name, class1_n), rep(class2_name, class2_n)))
 
     class1_x <- mvrnorm(class1_n, class1_mu, class1_sigma_cap) # nolint
