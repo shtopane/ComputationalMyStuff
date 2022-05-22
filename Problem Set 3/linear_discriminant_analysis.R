@@ -204,3 +204,51 @@ for (i in 1:sigma_adjustment_factor_length) {
 
 plot(1:sigma_adjustment_factor_length, test_lda_new_error_mean_container, type = "l")
 lines(test_logit_new_error_mean_container, col = "red")
+
+# 2.b) Worsen LDA by changing sample sizes for the 2 classes
+simulation_class1_sample_size <- seq(50, 500, le = 10)
+simulation_class1_sample_size <- as.integer(simulation_class1_sample_size)
+simulation_class2_sample_size <- seq(800, 500, le = 10)
+simulation_class2_sample_size <- as.integer(simulation_class2_sample_size)
+
+simulation_test_lda_error <- rep(NA, simulation_runs)
+simulation_test_logit_error <- rep(NA, simulation_runs)
+
+simulation_test_lda_mean_error <- rep(NA, 10)
+simulation_test_logit_mean_error <- rep(NA, 10)
+
+for(i in 1:10){
+    class1_sample <- simulation_class1_sample_size[i]
+    class2_sample <- simulation_class2_sample_size[i]
+
+    for(j in 1:simulation_runs){
+        train_data <- generate_data_lda(
+            class1_n = class1_sample,
+            class2_n = class2_sample,
+            class1_mu,
+            class2_mu,
+        )
+        test_data <- generate_data_lda(
+            class1_n = class1_sample,
+            class2_n = class2_sample,
+            class1_mu,
+            class2_mu,
+        )
+
+        train_lda <- lda(class_type ~ C1 + C2, data = train_data)
+        train_logit <- glm(class_type ~ C1 + C2, data = train_data, family = "binomial")
+
+        test_lda_predict <- predict(train_lda, newdata = test_data)
+        test_logit_predict <- predict(train_logit, newdata = test_data, type = "response")
+        test_logit_predict_class_type <- get_class_logit(test_logit_predict, class1_name, class2_name)
+
+        simulation_test_lda_error[j] <- get_average_prediction_error(test_data$class_type, test_lda_predict$class)
+        simulation_test_logit_error[j] <- get_average_prediction_error(test_data$class_type, test_logit_predict_class_type)
+    }
+
+    simulation_test_lda_mean_error[i] <- mean(simulation_test_lda_error)
+    simulation_test_logit_mean_error[i] <- mean(simulation_test_logit_error)
+}
+
+plot(1:10, simulation_test_lda_mean_error)
+points(simulation_test_logit_mean_error)
