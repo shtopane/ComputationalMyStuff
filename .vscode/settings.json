@@ -10,8 +10,11 @@
     "--r-binary=C:\\Program Files\\R\\R-4.1.1\\bin\\R.exe"
     ],
     "cSpell.words": [
+        "ggplot",
+        "ggtitle",
         "loglikelihood",
         "mvrnorm",
+        "mvtnorm",
         "mylikelihood",
         "myloglikelihood",
         "newdata",
