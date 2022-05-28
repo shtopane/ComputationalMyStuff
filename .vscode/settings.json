@@ -5,14 +5,16 @@
     "r.lsp.debug": true,
     "r.lsp.diagnostics": true,
     "r.rterm.option": [
-    "--no-save",
-    "--no-restore",
-    "--r-binary=C:\\Program Files\\R\\R-4.1.1\\bin\\R.exe"
+        "--no-save",
+        "--no-restore",
+        "--r-binary=C:\\Program Files\\R\\R-4.1.1\\bin\\R.exe"
     ],
     "cSpell.words": [
         "ggplot",
         "ggtitle",
+        "ISLR",
         "loglikelihood",
+        "LOOCV",
         "mvrnorm",
         "mvtnorm",
         "mylikelihood",
