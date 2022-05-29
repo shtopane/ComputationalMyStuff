@@ -15,6 +15,7 @@
         "ISLR",
         "loglikelihood",
         "LOOCV",
+        "medv",
         "mvrnorm",
         "mvtnorm",
         "mylikelihood",
