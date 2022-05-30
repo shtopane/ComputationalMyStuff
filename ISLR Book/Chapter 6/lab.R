@@ -1,9 +1,26 @@
 # Functions ----
-get_mse <- function(predicted, actual){
+get_mse <- function(predicted, actual) {
     mean((predicted - actual)^2)
 }
 # END Functions ----
-# Subset Selection Method
+
+# Constants ----
+
+# maximum variables in the Hitters dataset(?)
+hitters_max_variables <- 19
+# arguments for alpha parameter of glmnet()
+perform_ridge <- 0
+perform_lasso <- 1
+# grid of lambda values, also constant throughout the file
+# lambda = [10^10, 10^-2]
+grid <- 10^seq(10, -2, length = 100)
+lambda_test4 <- 4
+lambda_test_large <- 1e10 # 10^10
+lambda_OLS <- 0 # nolint
+
+# END Constants ----
+
+# Data Preparation ----
 library("ISLR2")
 View(Hitters)
 names(Hitters)
@@ -14,6 +31,9 @@ sum(is.na(Hitters$Salary)) # 59
 Hitters <- na.omit(Hitters) # nolint
 dim(Hitters)
 sum(is.na(Hitters))
+# END Data Preparation ----
+
+# 6.5.1 Subset Selection Method ----
 
 # perform best subset selection by identifying the best model that contains a given number
 # of predictors, where best is quantified using RSS.
@@ -21,7 +41,6 @@ library("leaps")
 regfit_full <- regsubsets(Salary ~ ., Hitters)
 summary(regfit_full)
 # by default reports only the best 8 variable models. We can change that
-hitters_max_variables <- 19
 regfit_full <- regsubsets(Salary ~ ., data = Hitters, nvmax = hitters_max_variables)
 reg_summary <- summary(regfit_full)
 names(reg_summary)
@@ -85,6 +104,7 @@ for (i in seq_len_max_variables) {
     regfit_best_prediction <- test_matrix[, names(regfit_best_coefficients)] %*% regfit_best_coefficients
     val_errors[i] <- mean((Hitters$Salary[test] - regfit_best_prediction)^2)
 }
+
 val_errors
 which.min(val_errors)
 coef(regfit_best, which.min(val_errors))
@@ -130,6 +150,7 @@ for (j in 1:k) {
         cv_errors[j, i] <- mean((Hitters$Salary[folds == j] - pred)^2)
     }
 }
+
 cv_errors
 # for a matrix 1 indicates rows, 2 indicates columns
 # so apply the mean function over the columns of the cv_errors matrix
@@ -143,32 +164,30 @@ plot(mean_cv_errors, type = "b")
 # Use best subset selection to obtain the best 10-variable model
 reg_best <- regsubsets(Salary ~ ., data = Hitters, nvmax = hitters_max_variables)
 coef(reg_best, 10)
+# End 6.5.1 Subset Selection Method ----
 
-# 6.5.2 Ridge Regression and the Lasso
-x <- model.matrix(Salary ~ ., Hitters)[, -1] # why?
+# 6.5.2 Ridge Regression and the Lasso ----
+x <- model.matrix(Salary ~ ., Hitters)[, -1] # why?, are we leaving out the Salary column, I'm not sure
 y <- Hitters$Salary
-# arguments for alpha parameter of glmnet()
-perform_ridge <- 0
-perform_lasso <- 1
+
 library("glmnet")
-grid <- 10^seq(10, -2, length = 100)
+
 # lambda is there by default but we can specify it as well
-# lambda = [10^10, 10^-2]
 # glmnet standardizes the variables by default. If you need it to not be the case,
 # pass standardize = FALSE
-ridge_mod <- glmnet(x, y, alpha = perform_ridge, lambda = grid)
-dim(coef(ridge_mod))
+ridge_mod_all_data <- glmnet(x, y, alpha = perform_ridge, lambda = grid)
+dim(coef(ridge_mod_all_data))
 # Coefficients when lambda = 11 498
-ridge_mod$lambda[50] # 11498
-coef(ridge_mod)[, 50]
-sqrt(sum(coef(ridge_mod)[-1, 50]^2)) # 6.36
+ridge_mod_all_data$lambda[50] # 11498
+coef(ridge_mod_all_data)[, 50]
+sqrt(sum(coef(ridge_mod_all_data)[-1, 50]^2)) # 6.36
 # Coefficients when lambda = 705
-ridge_mod$lambda[60] # 705
-coef(ridge_mod)[, 60]
-sqrt(sum(coef(ridge_mod)[-1, 60]^2)) # 57.11
+ridge_mod_all_data$lambda[60] # 705
+coef(ridge_mod_all_data)[, 60]
+sqrt(sum(coef(ridge_mod_all_data)[-1, 60]^2)) # 57.11
 
 # We can use predict to obtain ridge regression for lambda = 50
-predict(ridge_mod, s = 50, type = "coefficients")[1:20, ]
+predict(ridge_mod_all_data, s = 50, type = "coefficients")[1:20, ]
 
 # Split data into training and test set using a method where we choose a subset
 # between 1 and n(used as indices)
@@ -177,27 +196,25 @@ train_seq_len <- seq_len(nrow(x))
 train <- sample(train_seq_len, nrow(x) / 2)
 test <- (-train)
 y_test <- y[test]
-lambda_test <- 4
 
-ridge_mod <- glmnet(x[train, ], y[train], alpha = perform_ridge, lambda = grid, thresh = 1e-12)
-ridge_predict <- predict(ridge_mod, s = lambda_test, newx = x[test, ])
-get_mse(ridge_predict, y_test)
+ridge_mod_train_data <- glmnet(x[train, ], y[train], alpha = perform_ridge, lambda = grid, thresh = 1e-12)
+ridge_predict_train <- predict(ridge_mod_train_data, s = lambda_test4, newx = x[test, ])
+get_mse(ridge_predict_train, y_test)
 # Prediction for a model with just an intercept
 intercept_MSE <- mean((mean(y[train]) - y_test)^2) # nolint
+
 # Predict a model with very large lambda
-lambda_test_large <- 1e10 # 10^10
-ridge_predict <- predict(ridge_mod, s = lambda_test_large, newx = x[test, ])
-lambda_very_large_MSE <- get_mse(ridge_predict, y_test) # nolint
+ridge_predict_train_large_lambda <- predict(ridge_mod_train_data, s = lambda_test_large, newx = x[test, ])
+lambda_very_large_MSE <- get_mse(ridge_predict_train_large_lambda, y_test) # nolint
 abs(lambda_very_large_MSE - intercept_MSE)
 # This is better than a model with just the intercept
 
 # Predict a model OLS => lambda = 0
 # in order for glmnet to yield the same result we use exact = TRUE
-lambda_OLS <- 0 # nolint
-ridge_predict <- predict(ridge_mod, s = lambda_OLS, newx = x[test, ], exact = TRUE, x = x[train, ], y = y[train])
-OLS_MSE <- get_mse(ridge_predict, y_test) # nolint
+ridge_predict_OLS_lambda <- predict(ridge_mod_train_data, s = lambda_OLS, newx = x[test, ], exact = TRUE, x = x[train, ], y = y[train])
+OLS_MSE <- get_mse(ridge_predict_OLS_lambda, y_test) # nolint
 OLS_MSE
-predict(ridge_mod,
+predict(ridge_mod_train_data,
     s = 0, exact = T, type = "coefficients",
     x = x[train, ], y = y[train]
 )[1:20, ]
@@ -205,16 +222,35 @@ predict(ridge_mod,
 # Instead of fixing lambda, we should use cross-validation to choose this tuning parameter.
 # There is a build in cross-validation function cv.glmnet(), default is k = 10
 set.seed(1)
-cv_out <- cv.glmnet(x[train, ], y[train], alpha = perform_ridge)
-plot(cv_out)
-best_lambda <- cv_out$lambda.min
-best_lambda
+ridge_cv_out <- cv.glmnet(x[train, ], y[train], alpha = perform_ridge)
+plot(ridge_cv_out)
+ridge_best_lambda <- ridge_cv_out$lambda.min
+ridge_best_lambda
 # Calculate MSE with this best lambda
-ridge_predict <- predict(ridge_mod, s = best_lambda, newx = x[test, ])
-best_lambda_MSE <- get_mse(ridge_predict, y_test) # nolint
+ridge_predict_best_lambda <- predict(ridge_mod_train_data, s = ridge_best_lambda, newx = x[test, ])
+best_lambda_MSE <- get_mse(ridge_predict_best_lambda, y_test) # nolint
 best_lambda_MSE
 
 # Refit ridge on the full data set with best lambda
-out <- glmnet(x, y, alpha = perform_ridge)
-predict(out, type = "coefficients", s = best_lambda)[1:20, ]
+ridge_refit <- glmnet(x, y, alpha = perform_ridge)
+predict(ridge_refit, type = "coefficients", s = ridge_best_lambda)[1:20, ]
 # Note: none of the coefficients is 0!
+
+# Lasso
+lasso_mod <- glmnet(x[train, ], y[train], alpha = perform_lasso, lambda = grid)
+plot(lasso_mod)
+
+# Validate the test error using cross-validation
+set.seed(1)
+lasso_cv_out <- cv.glmnet(x[train, ], y[train], alpha = perform_lasso)
+plot(lasso_cv_out)
+lasso_best_lambda <- lasso_cv_out$lambda.min
+lasso_predict <- predict(lasso_mod, s = lasso_best_lambda, newx = x[test, ])
+lasso_best_MSE <- get_mse(lasso_predict, y_test) # nolint
+
+# Similar MSE to ridge with cross-validated lambda, but here
+# some variables will be completely left out(coefficients = 0)
+lasso_refit <- glmnet(x, y, alpha = perform_lasso, lambda = grid)
+lasso_coefficients <- predict(lasso_refit, type = "coefficients", s = lasso_best_lambda)[1:20, ]
+lasso_coefficients
+# END 6.5.2 Ridge Regression and the Lasso ----

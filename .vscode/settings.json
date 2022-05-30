@@ -25,6 +25,7 @@
         "mylikelihood",
         "myloglikelihood",
         "newdata",
+        "newx",
         "nvmax",
         "regfit",
         "regsubsets",
