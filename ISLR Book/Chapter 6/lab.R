@@ -167,7 +167,7 @@ coef(reg_best, 10)
 # End 6.5.1 Subset Selection Method ----
 
 # 6.5.2 Ridge Regression and the Lasso ----
-x <- model.matrix(Salary ~ ., Hitters)[, -1] # why?, are we leaving out the Salary column, I'm not sure
+x <- model.matrix(Salary ~ ., Hitters)[, -1] # trow out the intercept
 y <- Hitters$Salary
 
 library("glmnet")
