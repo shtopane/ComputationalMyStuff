@@ -13,7 +13,7 @@ perform_ridge <- 0
 perform_lasso <- 1
 # grid of lambda values, also constant throughout the file
 # lambda = [10^10, 10^-2]
-grid <- 10^seq(10, -2, length = 100)
+lambda_grid <- 10^seq(10, -2, length = 100)
 lambda_test4 <- 4
 lambda_test_large <- 1e10 # 10^10
 lambda_OLS <- 0 # nolint
@@ -175,7 +175,7 @@ library("glmnet")
 # lambda is there by default but we can specify it as well
 # glmnet standardizes the variables by default. If you need it to not be the case,
 # pass standardize = FALSE
-ridge_mod_all_data <- glmnet(x, y, alpha = perform_ridge, lambda = grid)
+ridge_mod_all_data <- glmnet(x, y, alpha = perform_ridge, lambda = lambda_grid)
 dim(coef(ridge_mod_all_data))
 # Coefficients when lambda = 11 498
 ridge_mod_all_data$lambda[50] # 11498
@@ -197,7 +197,7 @@ train <- sample(train_seq_len, nrow(x) / 2)
 test <- (-train)
 y_test <- y[test]
 
-ridge_mod_train_data <- glmnet(x[train, ], y[train], alpha = perform_ridge, lambda = grid, thresh = 1e-12)
+ridge_mod_train_data <- glmnet(x[train, ], y[train], alpha = perform_ridge, lambda = lambda_grid, thresh = 1e-12)
 ridge_predict_train <- predict(ridge_mod_train_data, s = lambda_test4, newx = x[test, ])
 get_mse(ridge_predict_train, y_test)
 # Prediction for a model with just an intercept
@@ -237,7 +237,7 @@ predict(ridge_refit, type = "coefficients", s = ridge_best_lambda)[1:20, ]
 # Note: none of the coefficients is 0!
 
 # Lasso
-lasso_mod <- glmnet(x[train, ], y[train], alpha = perform_lasso, lambda = grid)
+lasso_mod <- glmnet(x[train, ], y[train], alpha = perform_lasso, lambda = lambda_grid)
 plot(lasso_mod)
 
 # Validate the test error using cross-validation
@@ -250,7 +250,7 @@ lasso_best_MSE <- get_mse(lasso_predict, y_test) # nolint
 
 # Similar MSE to ridge with cross-validated lambda, but here
 # some variables will be completely left out(coefficients = 0)
-lasso_refit <- glmnet(x, y, alpha = perform_lasso, lambda = grid)
+lasso_refit <- glmnet(x, y, alpha = perform_lasso, lambda = lambda_grid)
 lasso_coefficients <- predict(lasso_refit, type = "coefficients", s = lasso_best_lambda)[1:20, ]
 lasso_coefficients
 # END 6.5.2 Ridge Regression and the Lasso ----
