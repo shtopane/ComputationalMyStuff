@@ -1,3 +1,8 @@
+# Functions ----
+get_mse <- function(predicted, actual){
+    mean((predicted - actual)^2)
+}
+# END Functions ----
 # Subset Selection Method
 library("ISLR2")
 View(Hitters)
@@ -176,13 +181,13 @@ lambda_test <- 4
 
 ridge_mod <- glmnet(x[train, ], y[train], alpha = perform_ridge, lambda = grid, thresh = 1e-12)
 ridge_predict <- predict(ridge_mod, s = lambda_test, newx = x[test, ])
-mean((ridge_predict - y_test)^2)
+get_mse(ridge_predict, y_test)
 # Prediction for a model with just an intercept
 intercept_MSE <- mean((mean(y[train]) - y_test)^2) # nolint
 # Predict a model with very large lambda
 lambda_test_large <- 1e10 # 10^10
 ridge_predict <- predict(ridge_mod, s = lambda_test_large, newx = x[test, ])
-lambda_very_large_MSE <- mean((ridge_predict - y_test)^2) # nolint
+lambda_very_large_MSE <- get_mse(ridge_predict, y_test) # nolint
 abs(lambda_very_large_MSE - intercept_MSE)
 # This is better than a model with just the intercept
 
@@ -190,7 +195,7 @@ abs(lambda_very_large_MSE - intercept_MSE)
 # in order for glmnet to yield the same result we use exact = TRUE
 lambda_OLS <- 0 # nolint
 ridge_predict <- predict(ridge_mod, s = lambda_OLS, newx = x[test, ], exact = TRUE, x = x[train, ], y = y[train])
-OLS_MSE <- mean((ridge_predict - y_test)^2) # nolint
+OLS_MSE <- get_mse(ridge_predict, y_test) # nolint
 OLS_MSE
 predict(ridge_mod,
     s = 0, exact = T, type = "coefficients",
@@ -206,7 +211,7 @@ best_lambda <- cv_out$lambda.min
 best_lambda
 # Calculate MSE with this best lambda
 ridge_predict <- predict(ridge_mod, s = best_lambda, newx = x[test, ])
-best_lambda_MSE <- mean((ridge_predict - y_test)^2) # nolint
+best_lambda_MSE <- get_mse(ridge_predict, y_test) # nolint
 best_lambda_MSE
 
 # Refit ridge on the full data set with best lambda
