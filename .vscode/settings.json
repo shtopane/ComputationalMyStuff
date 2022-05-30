@@ -20,6 +20,7 @@
         "LOOCV",
         "medv",
         "mfrow",
+        "MSEP",
         "mvrnorm",
         "mvtnorm",
         "mylikelihood",
@@ -31,6 +32,7 @@
         "regsubsets",
         "Seleciton",
         "topleft",
+        "validationplot",
         "xlab",
         "ylab"
     ]

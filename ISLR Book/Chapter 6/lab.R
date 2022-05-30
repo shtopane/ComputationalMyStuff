@@ -254,3 +254,53 @@ lasso_refit <- glmnet(x, y, alpha = perform_lasso, lambda = lambda_grid)
 lasso_coefficients <- predict(lasso_refit, type = "coefficients", s = lasso_best_lambda)[1:20, ]
 lasso_coefficients
 # END 6.5.2 Ridge Regression and the Lasso ----
+
+# 6.5.3 PCR and PLS Regression ----
+
+# pcr() is from the pls package
+library("pls")
+set.seed(2)
+# scale = TRUE: standardizing each predictor, so that the scale of 
+# the variables is the same
+# validation = "CV": computes 10-fold cross-validation error for each
+# possible value of M
+pcr_fit <- pcr(Salary ~ ., data = Hitters, scale = TRUE, validation = "CV")
+# pcr() reports **root mean squared error** we need to square it
+# to get the usual MSE
+summary(pcr_fit)
+# Plot MSE
+# ?validationplot
+validationplot(pcr_fit, val.type = "MSEP") # lowest on PCR = 18
+
+# perform PCR on the training set
+set.seed(1)
+pcr_fit_train_data <- pcr(Salary ~ ., data = Hitters, subset = train, scale = TRUE, validation = "CV")
+validationplot(pcr_fit_train_data, val.type = "MSEP") # lowest on PCR = 5
+pcr_predict <- predict(pcr_fit_train_data, x[test, ], ncomp = 5)
+get_mse(pcr_predict, y_test)
+# The test MSE is closer to Ridge regression and Lasso.
+# Downside of PCR is that the model is more difficult to interpret.
+# We also don't have coefficients!
+
+# Fit PCR on the full data
+pcr_fit_full_data <- pcr(y ~ x, scale = TRUE, ncomp = 5)
+summary(pcr_fit_full_data)
+
+# Partial Least Squares Regression
+set.seed(1)
+pls_fit <- plsr(Salary ~ ., data = Hitters, subset = train, scale = TRUE, validation = "CV")
+summary(pls_fit) # Lowest MSE is when M = 1
+pls_predict <- predict(pls_fit, x[test, ], ncomp = 1)
+get_mse(pls_predict, y_test)
+# Not that much higher than test MSE of ridge, lasso and PCR
+
+# Fit PLS using the whole data and M = 1
+pls_fit_full_data_m1 <- plsr(Salary ~ ., data = Hitters, scale = TRUE, ncomp = 1)
+summary(pls_fit_full_data_m1)
+# Notice that the percentage of variance in Salary that the one-component
+# PLS fit explains, 43.05 %, is almost as much as that explained using the final
+# five-component model PCR fit, 44.90 %. This is because PCR only attempts
+# to maximize the amount of variance explained in the predictors, while PLS
+# searches for directions that explain variance in both the predictors and the
+# response.
+# END 6.5.3 PCR and PLS Regression ----
