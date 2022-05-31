@@ -40,8 +40,17 @@ plot_regsubsets <- function(reg_object, variable_names) {
 
     return(c(var1_min, var2_max, var3_min, var4_min))
 }
+
+extract_significant_coefficients <- function(lm_object, sign_level = 0.05) {
+    # data.frame(summary(lm_object)$coef[summary(lm_object)$coef[, 4] <= sign_level, 4])
+    lm_object_coef <- summary(lm_object)$coef
+    # Return all columns from the lm summary
+    returned_columns <- c(1, 2, 3, 4)
+    data.frame(lm_object_coef[lm_object_coef[, 4] <= sign_level, returned_columns])
+}
 # END Functions ----
-# 8.
+# Exercise 8 ----
+
 # a)
 set.seed(1)
 x <- rnorm(n)
@@ -139,3 +148,64 @@ lasso2_best_lambda <- lasso2_cv_out$lambda.min # 2.65
 lasso2_coefficients <- predict(lasso2_mod, type = "coefficients", s = lasso2_best_lambda)
 lasso2_coefficients
 # all other variables are thrown away, only 7th is left. coef: 1.45
+# END Exercise 8 ----
+
+# Exercise 9 ----
+library("ISLR2")
+# a)
+train_seq_len <- seq_len(nrow(College))
+train <- sample(train_seq_len, nrow(College) / 2)
+test <- (-train)
+y_test <- College[test]
+
+# b)
+college_lm <- lm(Apps ~ ., data = College, subset = train)
+summary(college_lm)
+extract_significant_coefficients(college_lm) # 9 significant variables out of 18
+
+# c) Ridge
+library("glmnet")
+college_x <- model.matrix(Apps ~ ., data = College)[, -1] # throw out intercept
+college_y <- College$Apps
+college_ridge <- glmnet(college_x[train, ], college_y[train], alpha = 0, lambda = lambda_grid)
+# cross-validate lambda
+set.seed(4)
+college_ridge_cv_out <- cv.glmnet(college_x[train, ], college_y[train], alpha = 0)
+plot(college_ridge_cv_out)
+college_ridge_best_lambda <- college_ridge_cv_out$lambda.min # 323.5558
+# Predict + test error
+college_ridge_predict <- predict(college_ridge, s = college_ridge_best_lambda, newx = college_x[test, ])
+mean((college_ridge_predict - college_y[test])^2) # MSE: 2527089
+
+# d) Lasso
+# cross-validate lambda
+set.seed(5)
+college_lasso_cv_out <- cv.glmnet(college_x[train, ], college_y[train], alpha = 1)
+plot(college_lasso_cv_out)
+college_lasso_best_lambda <- college_lasso_cv_out$lambda.min
+college_lasso <- glmnet(college_x[train, ], college_y[train], alpha = 1, lambda = college_lasso_best_lambda)
+# Report coefficients that are not zero
+college_lasso_coef <- predict(college_lasso, type = "coefficients", s = college_lasso_best_lambda)
+college_lasso_coef[college_lasso_coef != 0]
+sum(college_lasso_coef != 0) # 14?
+
+college_lasso_predict <- predict(college_lasso, s = college_lasso_best_lambda, newx = college_x[test, ])
+mean((college_lasso_predict - college_y[test])^2) # 1710207
+
+# e) PCR
+require(pls)
+set.seed(6)
+college_pcr <- pcr(Apps ~ ., data = College[train, ], scale = TRUE, validation = "CV")
+summary(college_pcr)
+validationplot(college_pcr, val.type = "MSEP")
+# Lowest error at 16 components
+college_pcr_predict <- predict(college_pcr, college_x[test, ], ncomp = 16)
+mean((college_pcr_predict - college_y[test])^2) # MSE: 1746647
+# f)
+set.seed(7)
+college_pls <- plsr(Apps ~ ., data = College[train, ], scale = TRUE, validation = "CV")
+summary(college_pls) # M = 9
+college_pls_predict <- predict(college_pls, college_x[test, ], ncomp = 9)
+mean((college_pls_predict - college_y[test])^2) # MSE: 1704102
+# they don't seem to do much more than linear regression
+# END Exercise 9 ----
